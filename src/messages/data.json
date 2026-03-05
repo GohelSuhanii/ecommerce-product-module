@@ -1,0 +1,10 @@
+{
+  "productsDetails": {
+    "form": {
+      "name": "Product Name",
+      "prodCode": "Product Code",
+      "brand": "Brand",
+      "category": "Category"
+    }
+  }
+}
