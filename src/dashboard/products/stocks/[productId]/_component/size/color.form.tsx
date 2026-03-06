@@ -1,4 +1,5 @@
-import { Add, AddRounded, Remove } from "@mui/icons-material";
+import { AddRounded } from "@mui/icons-material";
+
 import {
   Box,
   Button,
@@ -24,8 +25,10 @@ import { useProductStore } from "../product.store";
 interface ColorData {
   _id?: string;
   name: string;
-  hex: string[];
+  hex: string; // changed
 }
+
+type ColorFormErrors = Partial<Record<"name" | "hex", string | null>>;
 
 /* -------------------- Validation -------------------- */
 
@@ -50,19 +53,19 @@ const ProductColorPicker = () => {
   const [showColorForm, setShowColorForm] = useState(false);
 
   const [colorList, setColorList] = useState<
-    { _id: string; name: string; hexValue: string[] }[]
+    { _id: string; name: string; hexValue: string }[]
   >([
-    { _id: "1", name: "Red", hexValue: ["#FF0000"] },
-    { _id: "2", name: "Blue", hexValue: ["#0000FF"] },
+    { _id: "1", name: "Red", hexValue: "#FF0000" },
+    { _id: "2", name: "Blue", hexValue: "#0000FF" },
   ]);
 
   /* New Color Form State */
   const [formData, setFormData] = useState<ColorData>({
     name: "",
-    hex: ["#000000"],
+    hex: "#000000", // changed
   });
 
-  const [errors, setErrors] = useState<any>({});
+  const [errors, setErrors] = useState<ColorFormErrors>({});
 
   /* Zustand */
   const stock = useSingleStockStore((state) => state.stock);
@@ -84,11 +87,11 @@ const ProductColorPicker = () => {
   }, [colorList, selectedColor, stock.color?._id]);
 
   const colorListById = useMemo(() => {
-    const temp: Record<string, { hexValue: string[]; name: string }> = {};
+    const temp: Record<string, { name: string; hexValue: string }> = {};
     colorList.forEach((item) => {
       temp[item._id] = {
-        hexValue: item.hexValue,
         name: item.name,
+        hexValue: item.hexValue,
       };
     });
     return temp;
@@ -98,27 +101,29 @@ const ProductColorPicker = () => {
 
   const handleSubmitColor = () => {
     const nameError = validateColorName(formData.name);
-    const hexErrors: any = {};
+    const hexError = validateHex(formData.hex);
 
-    formData.hex.forEach((hex, i) => {
-      const error = validateHex(hex);
-      if (error) hexErrors[i] = error;
-    });
-
-    if (nameError || Object.keys(hexErrors).length > 0) {
-      setErrors({ name: nameError, hex: hexErrors });
+    if (nameError || hexError) {
+      setErrors({
+        name: nameError,
+        hex: hexError,
+      });
       return;
     }
 
     const newColor = {
       _id: Date.now().toString(),
       name: formData.name.trim(),
-      hexValue: formData.hex.map((h) => h.toUpperCase()),
+      hexValue: formData.hex.toUpperCase(),
     };
 
     setColorList((prev) => [...prev, newColor]);
 
-    setFormData({ name: "", hex: ["#000000"] });
+    setFormData({
+      name: "",
+      hex: "#000000",
+    });
+
     setErrors({});
     setShowColorForm(false);
   };
@@ -127,7 +132,16 @@ const ProductColorPicker = () => {
     <Box>
       {/* Header */}
       <Box display="flex" justifyContent="space-between" alignItems="center">
-        <Typography variant="h6">Choose Color</Typography>
+        <Typography
+          variant="h6"
+          // sx={{
+          //   color: "text.primary",
+          //   borderLeft: "4px solid",
+          //   borderLeftColor: "background.orange",
+          // }}
+        >
+          Choose Color
+        </Typography>
 
         {!stock.color?._id && (
           <Chip
@@ -141,14 +155,19 @@ const ProductColorPicker = () => {
       <Box mt={3}>
         <RadioGroup
           value={stock.color?._id || ""}
-          onChange={(e) =>
+          onChange={(e) => {
+            const selectedColor = colorListById[e.target.value];
+
+            if (!selectedColor) return;
+
             updateStock({
               color: {
                 _id: e.target.value,
-                ...colorListById[e.target.value],
+                name: selectedColor.name,
+                hexValue: selectedColor.hexValue,
               },
-            })
-          }
+            });
+          }}
         >
           <Stack direction="row" flexWrap="wrap" gap={2}>
             {/* Add Button */}
@@ -167,10 +186,7 @@ const ProductColorPicker = () => {
 
             {/* Colors */}
             {filteredColorList.map((data) => {
-              const background =
-                data.hexValue.length > 1
-                  ? `linear-gradient(45deg, ${data.hexValue.join(",")})`
-                  : data.hexValue[0];
+              const background = data.hexValue;
 
               return (
                 <Tooltip title={data.name} key={data._id}>
@@ -185,7 +201,7 @@ const ProductColorPicker = () => {
                               height: 35,
                               width: 35,
                               borderRadius: "50%",
-                              background,
+                              background: background,
                               border: "1px solid #ccc",
                             }}
                           />
@@ -196,7 +212,7 @@ const ProductColorPicker = () => {
                               height: 35,
                               width: 35,
                               borderRadius: "50%",
-                              background,
+                              background: background,
                               border: "2px solid black",
                             }}
                           />
@@ -231,61 +247,34 @@ const ProductColorPicker = () => {
             fullWidth
           />
 
-          {formData.hex.map((hex, index) => (
-            <TextField
-              key={index}
-              label="Hex Color"
-              value={hex}
-              onChange={(e) => {
-                const updated = [...formData.hex];
-                updated[index] = e.target.value;
-                setFormData({ ...formData, hex: updated });
-              }}
-              error={Boolean(errors.hex?.[index])}
-              helperText={errors.hex?.[index]}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <input
-                      type="color"
-                      value={hex}
-                      onChange={(e) => {
-                        const updated = [...formData.hex];
-                        updated[index] = e.target.value;
-                        setFormData({ ...formData, hex: updated });
-                      }}
-                      style={{
-                        border: "none",
-                        background: "none",
-                        width: 30,
-                        height: 30,
-                      }}
-                    />
-                  </InputAdornment>
-                ),
-
-                endAdornment:
-                  index !== 0 ? (
-                    <InputAdornment position="end">
-                      <IconButton
-                        edge="end"
-                        color="error"
-                        onClick={() => {
-                          const updated = formData.hex.filter(
-                            (_, i) => i !== index
-                          );
-                          setFormData({ ...formData, hex: updated });
-                        }}
-                      >
-                        <Remove />
-                      </IconButton>
-                    </InputAdornment>
-                  ) : null,
-              }}
-              fullWidth
-            />
-          ))}
-          {formData.hex.length < 3 && (
+          <TextField
+            label="Hex Color"
+            value={formData.hex}
+            onChange={(e) => setFormData({ ...formData, hex: e.target.value })}
+            error={Boolean(errors.hex)}
+            helperText={errors.hex}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <input
+                    type="color"
+                    value={formData.hex}
+                    onChange={(e) =>
+                      setFormData({ ...formData, hex: e.target.value })
+                    }
+                    style={{
+                      border: "none",
+                      background: "none",
+                      width: 30,
+                      height: 30,
+                    }}
+                  />
+                </InputAdornment>
+              ),
+            }}
+            fullWidth
+          />
+          {/* {formData.hex.length < 3 && (
             <Button
               variant="outlined"
               startIcon={<Add />}
@@ -298,7 +287,7 @@ const ProductColorPicker = () => {
             >
               Add New Shade
             </Button>
-          )}
+          )} */}
 
           <Grid container spacing={2}>
             <Grid size={{ xs: 6 }}>

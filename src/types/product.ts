@@ -2,9 +2,9 @@ import type { Category } from "./category";
 import type { Fabric } from "./fabric";
 import type { Garment } from "./garment";
 
-import type { Color } from "@mui/material";
 import type { Region } from "./region";
 
+import type { ProductColorType } from "./color";
 import type { SleeveLength } from "./sleeveLength";
 
 export interface ProductSize {
@@ -14,10 +14,10 @@ export interface ProductSize {
 }
 
 export interface ProductStock {
-  _id?: string;
+  _id: string;
   product: string;
   size: ProductSize[];
-  color: Color;
+  color: ProductColorType;
   quantity: number;
   image?: string[];
 }

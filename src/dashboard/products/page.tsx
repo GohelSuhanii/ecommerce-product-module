@@ -28,7 +28,7 @@ import { AgGridProvider, AgGridReact } from "ag-grid-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
-import type { ProductFormData } from "../../types/product";
+import type { ProductFormData, ProductStock } from "../../types/product";
 
 type ProductFormValues = {
   styleSheet: File | null;
@@ -105,7 +105,7 @@ const ProductPage = () => {
     setOpen(true);
   };
 
-  const handleEditStock = (data: any) => {
+  const handleEditStock = (data: ProductStock) => {
     navigate(`/dashboard/products/stocks/${data?._id}`);
   };
 
@@ -467,10 +467,13 @@ const ProductPage = () => {
               variant="contained"
               onClick={() => {
                 const updatedProduct: Product = {
+                  _id: formData._id || crypto.randomUUID(),
                   name: formData.name,
                   prodCode: formData.prodCode,
                   brand: { name: formData.brand },
+
                   category: { name: formData.categoryId },
+
                   isActive: true,
                 };
 

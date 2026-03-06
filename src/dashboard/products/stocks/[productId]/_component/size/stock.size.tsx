@@ -12,12 +12,6 @@ import { useState } from "react";
 import { useSingleStockStore } from "../../../../../../store/singleStock.store";
 import { ProductSizeForm } from "./size.form";
 
-const sizeOptions = [
-  { label: "12-14", value: "12-14" },
-  { label: "14-16", value: "14-16" },
-  { label: "16-18", value: "16-18" },
-];
-
 interface ProductSize {
   size: string;
   price: number;
@@ -98,7 +92,7 @@ interface ProductSizeProps {
   warehouseOptions?: SelectOption[];
 }
 
-export const ProductSizes = ({ showError, options }: ProductSizeProps) => {
+export const ProductSizes = ({ showError }: ProductSizeProps) => {
   const sizeOptions = [
     { label: "12-14", value: "12-14" },
     { label: "14-16", value: "14-16" },
@@ -110,6 +104,11 @@ export const ProductSizes = ({ showError, options }: ProductSizeProps) => {
   const [editSize, setEditSize] = useState<ProductSize>();
 
   const { stock, deleteSize, setSize, updateSize } = useSingleStockStore();
+
+  // if size used then will not appear in drop down
+  const filteredSizeOptions = sizeOptions.filter(
+    (option) => !stock.size.some((s) => s.size === option.value)
+  );
 
   const handleFormOpen = () => {
     setEdit(false);
@@ -174,7 +173,7 @@ export const ProductSizes = ({ showError, options }: ProductSizeProps) => {
               setEdit(true);
               setOpenSize(true);
             }}
-            sizeOptions={sizeOptions}
+            // sizeOptions={sizeOptions}
           />
         ))}
       </Stack>
@@ -184,13 +183,12 @@ export const ProductSizes = ({ showError, options }: ProductSizeProps) => {
         onClose={() => setOpenSize(false)}
         title={edit ? "Update Size" : "Add New Size"}
         maxWidth="lg"
-        withDivider={false}
+        // withDivider={false}
       >
         <ProductSizeForm
           isEdit={edit}
           initialValue={editSize}
-          sizeOptions={sizeOptions}
-          // warehouseOptions={warehouseOptions}
+          sizeOptions={edit ? sizeOptions : filteredSizeOptions}
           closeHandler={() => setOpenSize(false)}
           submitHandler={submitHandler}
         />

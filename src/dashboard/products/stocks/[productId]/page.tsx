@@ -22,7 +22,6 @@ import {
 
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import MultiColorBox from "../../../../components/MultiColorBox";
 import { useSingleStockStore } from "../../../../store/singleStock.store";
 import type { ProductStock } from "../../../../types/product";
 import { useProductStore } from "./_component/product.store";
@@ -35,15 +34,18 @@ const Page = () => {
   const [open, setOpen] = useState<boolean>(false);
   const [isEdit, setIsEdit] = useState<boolean>(false);
   const productStock = useProductStore((state) => state.productStock);
-  const { updateStock } = useSingleStockStore();
+  // const { updateStock } = useSingleStockStore();
+  const { updateStock, resetStock } = useSingleStockStore();
   // const { setIsEdit } = useProductStore();
 
   const handleEdit = (item: ProductStock) => {
     updateStock({
+      _id: item._id,
       image: item.image ?? [],
       color: item.color,
       size: item.size,
     });
+
     setIsEdit(true);
     setOpen(true);
   };
@@ -112,6 +114,7 @@ const Page = () => {
               },
             }}
             onClick={() => {
+              resetStock(); // clear previous form data
               setIsEdit(false);
               setOpen(true);
             }}
@@ -156,12 +159,12 @@ const Page = () => {
                 {/* Color + Sizes Row */}
                 <Box display="flex" alignItems="center" gap={1} mb={0.5}>
                   {/* Multi Color Box */}
-                  <MultiColorBox
-                    hexValue={item.color.hexValue}
+                  <Box
                     sx={{
                       height: 20,
                       width: 20,
                       borderRadius: "50%",
+                      backgroundColor: item.color.hexValue,
                       border: "1px solid white",
                     }}
                   />

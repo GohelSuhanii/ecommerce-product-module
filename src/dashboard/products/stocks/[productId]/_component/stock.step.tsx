@@ -32,41 +32,31 @@ const StockManagement = ({ productId, open, onClose, isEdit }: Props) => {
   /* ---------------- Submit New Stock ---------------- */
 
   const handleSubmitStock = () => {
+    if (!stock.color) {
+      console.error("Color is required");
+      return;
+    }
+
     const newStock: ProductStock = {
-      _id: crypto.randomUUID(),
+      _id: stock._id ?? crypto.randomUUID(),
       product: productId,
+      color: stock.color!,
       size: stock.size,
-      color: stock.color,
       quantity: stock.size.reduce((acc, item) => acc + item.quantity, 0),
       image: stock.image,
     };
 
-    addProductStock(newStock);
+    if (isEdit) {
+      updateProductStock(newStock);
+    } else {
+      addProductStock(newStock);
+    }
 
     console.log("DATA:", newStock);
 
     resetStock();
     onClose();
   };
-
-  /* ---------------- Update Stock ---------------- */
-
-  const handleUpdateStock = () => {
-    const updatedStock: ProductStock = {
-      _id: crypto.randomUUID(),
-      product: productId,
-      size: stock.size,
-      color: stock.color,
-      quantity: stock.size.reduce((acc, item) => acc + item.quantity, 0),
-      image: stock.image,
-    };
-
-    updateProductStock(updatedStock);
-
-    resetStock();
-    onClose();
-  };
-  console.log("isEdit value:", isEdit);
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
@@ -108,10 +98,7 @@ const StockManagement = ({ productId, open, onClose, isEdit }: Props) => {
           Cancel
         </Button>
 
-        <Button
-          variant="contained"
-          onClick={isEdit ? handleUpdateStock : handleSubmitStock}
-        >
+        <Button variant="contained" onClick={handleSubmitStock}>
           {isEdit ? "Update" : "Submit"}
         </Button>
       </DialogActions>
